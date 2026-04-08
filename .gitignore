@@ -1,0 +1,25 @@
+# node
+node_modules/
+
+# next
+.next/
+out/
+
+# logs
+*.log
+
+# env
+.env*
+
+# sistema
+.DS_Store
+Thumbs.db
+
+# arquivos estranhos
+*.meta
+*.tmp
+*.cache
+
+# build
+dist/
+build/
