@@ -42,7 +42,7 @@ export default function Home() {
     setData([]);
     setProgress(0);
 
-    const res = await fetch("/api/scan", {
+    const res = await fetch("http://localhost:3001/scan", {
       method: "POST",
       body: JSON.stringify({
         baseIP,

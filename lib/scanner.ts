@@ -214,12 +214,14 @@ export async function scan(
   const tarefas = ipList.map((i) => async () => {
     const ip = `${baseIP}.${i}`;
 
-    const res = await ping.promise.probe(ip);
+    const pingRes = await ping.promise.probe(ip);
 
     let hostname = "-";
     let abertas: number[] = [];
+    let ttl: number | undefined;
+    let mac = "-";
 
-    if (res.alive) {
+    if (pingRes.alive) {
       hostname = await getHostname(ip);
 
       const scans = await Promise.all(
@@ -227,18 +229,29 @@ export async function scan(
       );
 
       abertas = portas.filter((_, idx) => scans[idx]);
+
+      ttl = await getTTL(ip);
+
+      try {
+        mac = (await getMAC(ip)) || "-";
+      } catch {
+        mac = "-";
+      }
     }
 
-    const ttl = res.alive ? await getTTL(ip) : undefined;
+    const tempo = pingRes.time || "-";
 
     resultados.push({
       ip,
-      status: res.alive ? "ONLINE" : "OFFLINE",
+      status: pingRes.alive ? "ONLINE" : "OFFLINE",
       hostname,
       tipo: detectarTipoDispositivo(abertas, ttl),
       os: detectarOS(abertas, ttl),
-      portas: abertas.join(", "),
-      mac: res.alive ? await getMAC(ip) : "-",
+      tempo,
+      mac,
+      portas: abertas
+        .map((p) => `${p} (${PORT_SERVICES[p] || "Unknown"})`)
+        .join(", "),
     });
   });
 
