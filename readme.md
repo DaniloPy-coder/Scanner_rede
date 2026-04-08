@@ -19,8 +19,9 @@ Uma aplicação web moderna para escaneamento de rede local, capaz de identifica
   * Hostname
   * Sistema operacional (estimado)
   * Tipo de dispositivo
-  * Portas abertas
+  * Portas abertas (com nome do serviço)
   * Endereço MAC
+  * Tempo de resposta (latência)
 * 🎯 Destaque visual de portas importantes (HTTP, SSH, RDP, etc)
 * 📁 Exportação de resultados em CSV
 * 🎨 Interface moderna com Tailwind CSS
@@ -36,10 +37,10 @@ Uma aplicação web moderna para escaneamento de rede local, capaz de identifica
 * TypeScript
 * Tailwind CSS
 
-### Backend (integrado no Next.js)
+### Backend
 
 * Node.js
-* API Routes (Next.js)
+* Express
 * Streams (ReadableStream)
 
 ### Bibliotecas
@@ -47,7 +48,7 @@ Uma aplicação web moderna para escaneamento de rede local, capaz de identifica
 * `ping` → verificar se o host está ativo
 * `dns` → resolver hostname
 * `net` → escanear portas
-* `child_process` → obter TTL e MAC (via comandos do sistema)
+* `child_process` → obter TTL e MAC
 
 ---
 
@@ -70,6 +71,24 @@ npm install
 
 ## ▶️ Como rodar
 
+### 1️⃣ Backend (Express)
+
+```bash
+cd backend
+npm install
+npm run dev
+```
+
+Servidor rodando em:
+
+```
+http://localhost:3001
+```
+
+---
+
+### 2️⃣ Frontend (Next.js)
+
 ```bash
 npm run dev
 ```
@@ -84,12 +103,11 @@ http://localhost:3000
 
 ## 🚀 Como usar
 
-1. Defina o IP base
-   Ex:
+1. Defina o IP base:
 
-   ```
-   192.168.1
-   ```
+```
+192.168.1
+```
 
 2. Defina os IPs:
 
@@ -114,10 +132,11 @@ http://localhost:3000
 A aplicação exibirá em tempo real:
 
 * IP
-* Status (ONLINE/OFFLINE)
+* Status
 * Hostname
 * Tipo de dispositivo
 * Sistema operacional (estimado)
+* Tempo de resposta
 * Portas abertas (com nome do serviço)
 * Endereço MAC
 
@@ -125,40 +144,47 @@ A aplicação exibirá em tempo real:
 
 ## 💾 Exportação
 
-Clique no botão **"Exportar CSV"** para baixar os resultados.
+Clique em **"Exportar CSV"** para baixar os resultados.
 
 ---
 
 ## 🧠 Como funciona
 
 * O backend realiza o scan IP por IP
-* Os resultados são enviados em tempo real usando **streams**
-* O frontend consome os dados progressivamente
-* A UI atualiza conforme os dados chegam
+* Usa concorrência controlada para performance
+* Os resultados são enviados progressivamente
+* O frontend atualiza a interface em tempo real
 
 ---
 
-## ⚠️ Observações
+## ⚠️ Observações importantes
 
-* Funciona melhor em redes locais (LAN)
-* Algumas informações (OS e tipo) são estimativas
+* ⚠️ O scanner funciona apenas em redes locais (LAN)
+* ⚠️ Não funciona em ambientes serverless (ex: Vercel)
+* ⚠️ O backend precisa estar rodando localmente
+* Algumas informações são estimativas (OS e tipo)
 * O MAC Address depende da tabela ARP do sistema
+
+---
+
+## 🚀 Deploy
+
+O frontend pode ser hospedado na Vercel.
+
+⚠️ O backend deve rodar localmente ou em um servidor (VPS), pois utiliza recursos de rede não suportados em ambientes serverless.
 
 ---
 
 ## 📌 Futuras melhorias
 
-* 🔎 Identificação de fabricante via MAC
 * 📊 Dashboard com gráficos
 * 🌐 Mapeamento visual da rede
 * 🔐 Scanner de vulnerabilidades básico
-* ⚡ Paralelismo avançado
+* ⚡ WebSockets para tempo real avançado
 
 ---
 
 ## 👨‍💻 Autor
 
 Desenvolvido por Danilo 🚀
-Projeto para estudo, prática e portfólio.
-
-
+Projeto focado em aprendizado, redes e desenvolvimento full stack.
