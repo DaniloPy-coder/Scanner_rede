@@ -4,25 +4,47 @@ import { scan } from "../../lib/scanner";
 
 const app = express();
 
-app.use(cors());
+app.use(
+  cors({
+    origin: "*",
+  }),
+);
 app.use(express.json());
 
 app.post("/scan", async (req, res) => {
   try {
     const { baseIP, ips, ports } = req.body;
 
-    if (!ips) {
-      return res.status(400).json({ error: "IPs obrigatórios" });
+    const listaIPs = parseIPs(ips);
+    const total = listaIPs.length;
+
+    res.setHeader("Content-Type", "text/plain"); // IMPORTANTE
+    res.setHeader("Cache-Control", "no-cache");
+    res.setHeader("Connection", "keep-alive");
+    res.setHeader("Transfer-Encoding", "chunked");
+
+    let progress = 0;
+
+    for (const i of listaIPs) {
+      const resultado = await scan(baseIP, [i], ports, 1000, 1);
+
+      progress++;
+
+      const payload = {
+        progress,
+        total,
+        data: resultado[0],
+      };
+
+      res.write(JSON.stringify(payload) + "\n");
+
+      await new Promise((r) => setTimeout(r, 30));
     }
 
-    const listaIPs = parseIPs(ips);
-
-    const resultados = await scan(baseIP, listaIPs, ports, 1000, 20);
-
-    res.json(resultados);
+    res.end();
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: "Erro no scan" });
+    res.status(500).end();
   }
 });
 
