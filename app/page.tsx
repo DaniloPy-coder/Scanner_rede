@@ -136,7 +136,7 @@ export default function Home() {
       const match = clean.match(/\d+/);
       const port = match ? Number(match[0]) : null;
 
-      const color = getPortColor(port); // 👈 usando util
+      const color = getPortColor(port);
 
       return (
         <span key={clean} className={`text-xs px-2 py-1 mr-1 rounded ${color}`}>
@@ -147,7 +147,7 @@ export default function Home() {
   }
 
   return (
-    <main className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-black text-white p-6">
+    <main className="min-h-screen bg-linear-to-br from-gray-900 via-gray-800 to-black text-white p-6">
       <div className="max-w-6xl mx-auto">
         {/* HEADER */}
         <div className="mb-8">
