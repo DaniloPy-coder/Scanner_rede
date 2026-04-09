@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { getPortColor } from "../lib/csv";
 
 const PORT_SERVICES: Record<number, string> = {
   21: "FTP",
@@ -31,6 +32,7 @@ export default function Home() {
   const [baseIP, setBaseIP] = useState("192.168.1");
   const [ips, setIps] = useState("1-20");
   const [ports, setPorts] = useState("22,80,443,3389");
+  const [currentIP, setCurrentIP] = useState("");
 
   async function handleScan() {
     if (!ips.trim()) {
@@ -44,6 +46,9 @@ export default function Home() {
 
     const res = await fetch("http://localhost:3001/scan", {
       method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
       body: JSON.stringify({
         baseIP,
         ips,
@@ -51,28 +56,44 @@ export default function Home() {
       }),
     });
 
-    const reader = res.body?.getReader();
+    if (!res.body) return;
+
+    const reader = res.body.getReader();
     const decoder = new TextDecoder();
 
     let buffer = "";
 
     while (true) {
-      const { done, value } = await reader!.read();
-      if (done) break;
+      const result = await reader.read();
 
-      buffer += decoder.decode(value);
+      if (result.done) break;
 
-      const lines = buffer.split("\n");
+      const value = result.value;
+
+      buffer += decoder.decode(value, { stream: true });
+
+      let lines = buffer.split("\n");
+
       buffer = lines.pop() || "";
 
       for (const line of lines) {
-        if (!line) continue;
+        if (!line.trim()) continue;
 
-        const parsed = JSON.parse(line);
+        try {
+          const parsed = JSON.parse(line);
 
-        setProgress((parsed.progress / parsed.total) * 100);
+          setProgress((parsed.progress / parsed.total) * 100);
 
-        setData((prev) => [...prev, parsed.data]);
+          setCurrentIP(parsed.data.ip);
+
+          setData((prev) => {
+            const exists = prev.some((item) => item.ip === parsed.data.ip);
+            if (exists) return prev;
+            return [...prev, parsed.data];
+          });
+        } catch (err) {
+          console.warn("Erro ao parsear linha:", line);
+        }
       }
     }
 
@@ -109,41 +130,20 @@ export default function Home() {
   function renderPortas(portas: string) {
     if (!portas) return "-";
 
-    return (
-      <div className="flex flex-wrap gap-1">
-        {portas.split(",").map((p) => {
-          const port = Number(p.trim());
-          const service = PORT_SERVICES[port] || "";
+    return portas.split(",").map((p) => {
+      const clean = p.trim();
 
-          let style = "bg-gray-600/30 text-gray-300 border border-gray-500/30";
+      const match = clean.match(/\d+/);
+      const port = match ? Number(match[0]) : null;
 
-          if (port === 80 || port === 443)
-            style = "bg-blue-500/20 text-blue-400 border border-blue-500/30";
+      const color = getPortColor(port); // 👈 usando util
 
-          if (port === 22)
-            style =
-              "bg-yellow-500/20 text-yellow-400 border border-yellow-500/30";
-
-          if (port === 3389)
-            style = "bg-red-500/20 text-red-400 border border-red-500/30";
-
-          if (port === 3306)
-            style =
-              "bg-purple-500/20 text-purple-400 border border-purple-500/30";
-
-          return (
-            <span key={p} className={`text-xs px-2 py-1 rounded-md ${style}`}>
-              <div className="flex gap-1 items-center">
-                <span>{port}</span>
-                {service && (
-                  <span className="text-[10px] opacity-70">{service}</span>
-                )}
-              </div>
-            </span>
-          );
-        })}
-      </div>
-    );
+      return (
+        <span key={clean} className={`text-xs px-2 py-1 mr-1 rounded ${color}`}>
+          {clean}
+        </span>
+      );
+    });
   }
 
   return (
@@ -222,6 +222,12 @@ export default function Home() {
             </div>
             <p className="text-xs text-gray-400 mt-1">
               {Math.round(progress)}% concluído
+            </p>
+            <p className="text-xs text-blue-400 mt-1">
+              Escaneando: {currentIP}
+            </p>
+            <p className="text-xs text-gray-400 mt-1">
+              {data.length} dispositivos encontrados
             </p>
           </div>
         )}
