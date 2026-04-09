@@ -4,6 +4,8 @@ import { useState } from "react";
 import { useScan } from "../hooks/useScan";
 import { RenderPortas } from "./components/renderPortas";
 import { exportCSV } from "../lib/exportCSV";
+import { maskIP, maskMAC } from "../lib/anonymize";
+import { SafeModeToggle } from "./components/SafeModeToggle";
 
 type Resultado = {
   ip: string;
@@ -22,6 +24,7 @@ export default function Home() {
   const [baseIP, setBaseIP] = useState("192.168.1");
   const [ips, setIps] = useState("1-20");
   const [ports, setPorts] = useState("22,80,443,3389");
+  const [safeMode, setSafeMode] = useState(true);
 
   const filteredData = data.filter(
     (r) => filter === "ALL" || r.status === filter,
@@ -31,13 +34,20 @@ export default function Home() {
     <main className="min-h-screen bg-linear-to-br from-gray-900 via-gray-800 to-black text-white p-6">
       <div className="max-w-6xl mx-auto">
         {/* HEADER */}
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold tracking-tight">
-            🌐 Scanner de Rede
-          </h1>
-          <p className="text-gray-400 mt-1">
-            Descubra dispositivos, portas abertas e sistema operacional
-          </p>
+        <div className="mb-8 flex justify-between items-center">
+          <div>
+            <h1 className="text-4xl font-bold tracking-tight">
+              🌐 Scanner de Rede
+            </h1>
+            <p className="text-gray-400 mt-1">
+              Descubra dispositivos, portas abertas e sistema operacional
+            </p>
+          </div>
+
+          <SafeModeToggle
+            safeMode={safeMode}
+            onToggle={() => setSafeMode((prev) => !prev)}
+          />
         </div>
 
         {/* CONFIG */}
@@ -161,7 +171,9 @@ export default function Home() {
                   key={i}
                   className="border-t border-gray-800 hover:bg-gray-800/50 transition"
                 >
-                  <td className="p-3 font-medium">{r.ip}</td>
+                  <td className="p-3 font-medium">
+                    {safeMode ? maskIP(r.ip) : r.ip}
+                  </td>
 
                   <td className="p-3">
                     <span
@@ -189,7 +201,9 @@ export default function Home() {
                     <RenderPortas portas={r.portas} />
                   </td>
 
-                  <td className="p-3 text-gray-400">{r.mac || "-"}</td>
+                  <td className="p-3 text-gray-400">
+                    {safeMode ? maskMAC(r.mac) : r.mac || "-"}
+                  </td>
                 </tr>
               ))}
             </tbody>
