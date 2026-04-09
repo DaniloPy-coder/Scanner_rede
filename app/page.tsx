@@ -1,18 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { getPortColor } from "../lib/csv";
 import { useScan } from "../hooks/useScan";
-
-const PORT_SERVICES: Record<number, string> = {
-  21: "FTP",
-  22: "SSH",
-  80: "HTTP",
-  443: "HTTPS",
-  3306: "MySQL",
-  3389: "RDP",
-  8080: "HTTP-ALT",
-};
+import { RenderPortas } from "./components/renderPortas";
+import { exportCSV } from "../lib/exportCSV";
 
 type Resultado = {
   ip: string;
@@ -32,8 +23,9 @@ export default function Home() {
   const [ips, setIps] = useState("1-20");
   const [ports, setPorts] = useState("22,80,443,3389");
 
-  const filteredData =
-    filter === "ALL" ? data : data.filter((r) => r.status === filter);
+  const filteredData = data.filter(
+    (r) => filter === "ALL" || r.status === filter,
+  );
 
   function exportCSV() {
     const headers = ["IP", "Status", "Hostname", "Tipo", "OS", "MAC", "Portas"];
@@ -57,25 +49,6 @@ export default function Home() {
     a.href = url;
     a.download = "scan-rede.csv";
     a.click();
-  }
-
-  function renderPortas(portas: string) {
-    if (!portas) return "-";
-
-    return portas.split(",").map((p) => {
-      const clean = p.trim();
-
-      const match = clean.match(/\d+/);
-      const port = match ? Number(match[0]) : null;
-
-      const color = getPortColor(port);
-
-      return (
-        <span key={clean} className={`text-xs px-2 py-1 mr-1 rounded ${color}`}>
-          {clean}
-        </span>
-      );
-    });
   }
 
   return (
@@ -132,7 +105,7 @@ export default function Home() {
               <button
                 onClick={() => startScan(baseIP, ips, ports)}
                 disabled={loading}
-                className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 transition-all rounded-lg p-2 font-semibold flex items-center justify-center gap-2"
+                className="cursor-pointer w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 transition-all rounded-lg p-2 font-semibold flex items-center justify-center gap-2"
               >
                 {loading && (
                   <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
@@ -175,7 +148,7 @@ export default function Home() {
               <button
                 key={f}
                 onClick={() => setFilter(f)}
-                className={`px-3 py-1 rounded-lg text-sm ${
+                className={`px-3 py-1 rounded-lg text-sm cursor-pointer ${
                   filter === f ? "bg-blue-600" : "bg-gray-700 hover:bg-gray-600"
                 }`}
               >
@@ -183,8 +156,8 @@ export default function Home() {
               </button>
             ))}
             <button
-              onClick={exportCSV}
-              className="bg-green-600 hover:bg-green-700 px-3 py-1 rounded-lg text-sm"
+              onClick={() => exportCSV()}
+              className="bg-green-600 hover:bg-green-700 px-3 py-1 rounded-lg text-sm cursor-pointer"
             >
               Exportar CSV
             </button>
@@ -236,7 +209,9 @@ export default function Home() {
 
                   <td className="p-3">{r.os}</td>
 
-                  <td className="p-3">{renderPortas(r.portas)}</td>
+                  <td className="p-3">
+                    <RenderPortas portas={r.portas} />
+                  </td>
 
                   <td className="p-3 text-gray-400">{r.mac || "-"}</td>
                 </tr>
