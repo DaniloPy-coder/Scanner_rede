@@ -44,7 +44,7 @@ export default function Home() {
     setData([]);
     setProgress(0);
 
-    const res = await fetch("http://localhost:3001/scan", {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/scan`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
