@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { getPortColor } from "../lib/csv";
+import { useScan } from "../hooks/useScan";
 
 const PORT_SERVICES: Record<number, string> = {
   21: "FTP",
@@ -24,81 +25,12 @@ type Resultado = {
 };
 
 export default function Home() {
-  const [data, setData] = useState<Resultado[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [progress, setProgress] = useState(0);
-  const [filter, setFilter] = useState("ALL");
+  const { data, loading, progress, currentIP, startScan } = useScan();
 
+  const [filter, setFilter] = useState("ALL");
   const [baseIP, setBaseIP] = useState("192.168.1");
   const [ips, setIps] = useState("1-20");
   const [ports, setPorts] = useState("22,80,443,3389");
-  const [currentIP, setCurrentIP] = useState("");
-
-  async function handleScan() {
-    if (!ips.trim()) {
-      alert("Digite um IP ou range");
-      return;
-    }
-
-    setLoading(true);
-    setData([]);
-    setProgress(0);
-
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/scan`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        baseIP,
-        ips,
-        ports: ports.split(",").map(Number),
-      }),
-    });
-
-    if (!res.body) return;
-
-    const reader = res.body.getReader();
-    const decoder = new TextDecoder();
-
-    let buffer = "";
-
-    while (true) {
-      const result = await reader.read();
-
-      if (result.done) break;
-
-      const value = result.value;
-
-      buffer += decoder.decode(value, { stream: true });
-
-      let lines = buffer.split("\n");
-
-      buffer = lines.pop() || "";
-
-      for (const line of lines) {
-        if (!line.trim()) continue;
-
-        try {
-          const parsed = JSON.parse(line);
-
-          setProgress((parsed.progress / parsed.total) * 100);
-
-          setCurrentIP(parsed.data.ip);
-
-          setData((prev) => {
-            const exists = prev.some((item) => item.ip === parsed.data.ip);
-            if (exists) return prev;
-            return [...prev, parsed.data];
-          });
-        } catch (err) {
-          console.warn("Erro ao parsear linha:", line);
-        }
-      }
-    }
-
-    setLoading(false);
-  }
 
   const filteredData =
     filter === "ALL" ? data : data.filter((r) => r.status === filter);
@@ -198,7 +130,7 @@ export default function Home() {
             {/* Botão */}
             <div className="flex items-end">
               <button
-                onClick={handleScan}
+                onClick={() => startScan(baseIP, ips, ports)}
                 disabled={loading}
                 className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 transition-all rounded-lg p-2 font-semibold flex items-center justify-center gap-2"
               >
