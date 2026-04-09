@@ -7,7 +7,7 @@ export function SafeModeToggle({ safeMode, onToggle }: Props) {
   return (
     <button
       onClick={onToggle}
-      className={`px-3 py-1 rounded-lg text-sm transition ${
+      className={`px-3 py-1 rounded-lg text-sm transition cursor-pointer ${
         safeMode
           ? "bg-yellow-600 hover:bg-yellow-700"
           : "bg-gray-700 hover:bg-gray-600"
