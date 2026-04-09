@@ -27,30 +27,6 @@ export default function Home() {
     (r) => filter === "ALL" || r.status === filter,
   );
 
-  function exportCSV() {
-    const headers = ["IP", "Status", "Hostname", "Tipo", "OS", "MAC", "Portas"];
-
-    const rows = data.map((r) => [
-      r.ip,
-      r.status,
-      r.hostname,
-      r.tipo,
-      r.os,
-      r.mac || "-",
-      r.portas,
-    ]);
-
-    const csv = [headers, ...rows].map((row) => row.join(",")).join("\n");
-
-    const blob = new Blob([csv], { type: "text/csv" });
-    const url = URL.createObjectURL(blob);
-
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "scan-rede.csv";
-    a.click();
-  }
-
   return (
     <main className="min-h-screen bg-linear-to-br from-gray-900 via-gray-800 to-black text-white p-6">
       <div className="max-w-6xl mx-auto">
@@ -156,7 +132,7 @@ export default function Home() {
               </button>
             ))}
             <button
-              onClick={() => exportCSV()}
+              onClick={() => exportCSV(data)}
               className="bg-green-600 hover:bg-green-700 px-3 py-1 rounded-lg text-sm cursor-pointer"
             >
               Exportar CSV
